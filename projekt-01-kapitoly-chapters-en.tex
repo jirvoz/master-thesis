@@ -1,2 +1,36 @@
 \chapter{Introduction}
 
+
+\chapter{NDP architecture}
+NDP is a network architecture for datacenters with Clos topology.
+
+The architecture includes switches and endpoints...
+
+\section{Precedent solutions}
+It was created to provide better latency than existing protocols for congestion control like Data Center TCP or Cut Payload.
+Newer RDMA over Converged Ethernet v2 using Ethernet flow control in switches.
+
+The reference implementation from original paper uses DPDK on Linux for end-host.
+The part for switches was implemented as software switch, for NetFPGA hardware switch and in P4.
+
+Congestion control - one receiver from many senders.
+Spread the flow to multiple paths - huge reordering.
+
+Inspired by Cut Payload design.
+Two priority queues for data packets and returning headers in ratio 1:10.
+NACK header returns instantly to notify the sender.
+
+Phase effect.
+
+\chapter{XDP}
+
+%reader should know about the linux kernel, but not in this depth
+\section{BPF}
+When running in user-space, packets must be copied across the kernel/user-space protection boundary
+history of creation of bpf
+
+\section{XDP}
+Based on eBPF language.
+Runs in kernel.
+Subset of C.
+Must terminate
