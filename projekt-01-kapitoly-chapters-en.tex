@@ -2,13 +2,30 @@
 
 
 \chapter{NDP architecture}
-NDP is a network architecture for datacenters with Clos topology.
+NDP is a network architecture for datacenters with Clos topology. 
+The primary goals are low completion latency for short flows, and predictable high throughput for longer flows.
 
 The architecture includes switches and endpoints...
 
+
+\section{Clos topology}
+Clos network...
+
+
 \section{Precedent solutions}
 It was created to provide better latency than existing protocols for congestion control like Data Center TCP or Cut Payload.
-Newer RDMA over Converged Ethernet v2 using Ethernet flow control in switches.
+
+Newer soulotion is RDMA over Converged Ethernet v2 using Ethernet flow control in switches. It provides good latency for datacenter workloads until loaded more heavily.
+When loaded, packets build up in switch queues. The switches the generate PFC pause frames, which negatively impact the network latency.
+
+Applications try to reuse TCP connections to lower the cost of TCP handshake.
+
+
+\section{Datacenter}
+Usual application are computations using RPC or similar protocol. The average utilization of network is not extremly high, but the load comes often in bursts.
+
+Computation in datacenters usually require sending task from one node to other workers and then recieving the results back to single node. This traffic causes problem named incast.
+
 
 The reference implementation from original paper uses DPDK on Linux for end-host.
 The part for switches was implemented as software switch, for NetFPGA hardware switch and in P4.
@@ -22,12 +39,15 @@ NACK header returns instantly to notify the sender.
 
 Phase effect.
 
+
+
 \chapter{XDP}
 
 %reader should know about the linux kernel, but not in this depth
 \section{BPF}
 When running in user-space, packets must be copied across the kernel/user-space protection boundary
 history of creation of bpf
+
 
 \section{XDP}
 Based on eBPF language.
