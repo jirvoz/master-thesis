@@ -10,6 +10,13 @@ The architecture includes switches and endpoints...
 
 \section{Clos topology}
 Clos network...
+Spine and leaf nodes/switches
+% describe more universally networks with more levels?
+every leaf connected to every spine node
+easily scalable for higher bandwidth and reliability by adding more spine and leaf nodes
+low cost (expand why)
+dual attach - machine is connected to two leaf switches for redundancy
+spine nodes are connected to exit leaves
 
 
 \section{Precedent solutions}
@@ -42,15 +49,54 @@ Phase effect.
 
 
 \chapter{XDP}
+% reader should know about the linux kernel, but not in this depth
 
-%reader should know about the linux kernel, but not in this depth
-\section{BPF}
+\section{Original/classic BPF}
+Berkeley Packet Filter
+used by tcpdump for filtering
+today obsolete, referred as classic bpf, because eBPF is often reffered as BPF
+today's kernel translates it to ebpf
+% https://docs.cilium.io/en/v1.8/bpf/
+
+
+\section{eBPF}
+extended Berkeley Packet Filter
 When running in user-space, packets must be copied across the kernel/user-space protection boundary
 history of creation of bpf
 
+roots in software-defined networking (SDN)
+iptables created in 1999
+iptables didn't scale for the evolving containerization (Kubernetes)
+In 2014 when Kubernetes started, the first eBPF patch was also merged to the Linux kernel.
+In 2015 the eBPF backend was merged to the LLVM compiler suite so the compiler was able to produce eBPF bytecode.
+The eBPF was also integrated to the Linux kernel's traffic control, which made the networking programmable using the eBPF language.
+% https://cilium.io/blog/2020/11/10/ebpf-future-of-networking/
+
+Can store data in maps/hashes
+
 
 \section{XDP}
-Based on eBPF language.
+Stands for eXpress Data Path 
+started in 2016 (first merge in Linux kernel)
+Packet processor in the Linux networking data path
+Focused on performance
+Uses eBPF language for packet processing.
 Runs in kernel.
 Subset of C.
-Must terminate
+Must terminate, no locking
+Not a kernel bypass
+XDP has got write access to raw packet
+Recycles pages to lower the usage of malloc/free.
+
+Can be used for filtering DOS attacks before processing the packet in network stack, load balancing and forwarding, flow sampling and monitoring.
+Add or pop encapsulation headers, modify packet header before forwarding.
+Possible function as router depend on multi-port TX (probably not implemented yet).
+Bridge to virtual machines.
+
+Can be offloaded to network card/NIC that supports the BPF code.
+
+Returns action: pass, drop, forward (TX), or abort meaning fail in the eBPF program.
+
+
+\subsection{Comparison with DPDK}
+XDP is meant as OSS alternative to DPDK.
