@@ -88,9 +88,13 @@ Not a kernel bypass
 XDP has got write access to raw packet
 Recycles pages to lower the usage of malloc/free.
 
-Can be used for filtering DOS attacks before processing the packet in network stack, load balancing and forwarding, flow sampling and monitoring.
+Though still in developmnet during writing this thesis, it is already used in production for packet filtering and processing by large companies like Facebook
+\footnote{http://vger.kernel.org/lpc-networking2018.html\#session-10}
+\footnote{http://vger.kernel.org/lpc-networking2018.html\#session-15}.
+
+Can be used for filtering DOS attacks before processing the packet in network stack, Layer-4 load balancing, forwarding, flow sampling and monitoring.
 Add or pop encapsulation headers, modify packet header before forwarding.
-Possible function as router depend on multi-port TX (probably not implemented yet).
+Possible function as a software router depend on multi-port TX (probably not implemented yet).
 Bridge to virtual machines.
 
 Can be offloaded to network card/NIC that supports the BPF code.
@@ -100,3 +104,23 @@ Returns action: pass, drop, forward (TX), or abort meaning fail in the eBPF prog
 
 \subsection{Comparison with DPDK}
 XDP is meant as OSS alternative to DPDK.
+
+It is a new layer in the Linux kernel network stack.
+It runs in kernel space, which offers reusage of mechanisms already implemented in kernel.
+DPDK runs in user space, entirely skipping the kernel and thus the user needs to implement everyting there.
+
+It takes action before allocation of socket buffer, which allows much faster action with the packet, before the packet continues further through the network stack.
+
+The DPDK usually needs a dedicated CPU to work on, while the XDP doesn't need a full separate CPU core.
+
+The performance of the XDP is in genral still behind the DPDK, despite continuously catching up.
+\footnote{http://vger.kernel.org/lpc\_net2018\_talks/presentation-lpc2018-xdp-future.pdf}
+Still offers huge performance gain compared to iptables without using the XDP.
+\ref{fig:drop-test}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=12cm]{drop-test}
+  \caption{Performance of XDP compared to DPDK and Linux without XDP on packet dropping measured in millions of packets per second. Measurement if from the end of the year 2018. (https://github.com/tohojo/xdp-paper)}
+  \label{fig:drop-test}
+\end{figure}
