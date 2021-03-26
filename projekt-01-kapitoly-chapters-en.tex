@@ -3,7 +3,7 @@
 
 \chapter{NDP architecture}
 NDP is a network architecture for datacenters with Clos topology. 
-The primary goals are low completion latency for short flows, and predictable high throughput for longer flows.
+The primary goals are low completion latency for short flows and predictable high throughput for longer flows.
 
 The architecture includes switches and endpoints...
 
@@ -18,22 +18,27 @@ low cost (expand why)
 dual attach - machine is connected to two leaf switches for redundancy
 spine nodes are connected to exit leaves
 
+The topology is designed to allow communication of every node with another at full connection speed.
+This requires splitting the sent data on different paths to ensure even flow of data and to evade congestion where more paths of different flows could meet.
+This requires a lot of reordering at the endpoints and thus large buffers for the received data.
+
 
 \section{Precedent solutions}
 It was created to provide better latency than existing protocols for congestion control like Data Center TCP or Cut Payload.
 
-Newer soulotion is RDMA over Converged Ethernet v2 using Ethernet flow control in switches. It provides good latency for datacenter workloads until loaded more heavily.
-When loaded, packets build up in switch queues. The switches the generate PFC pause frames, which negatively impact the network latency.
+Newer solution is RDMA over Converged Ethernet v2 using Ethernet flow control in switches. It provides good latency for datacenter workloads until loaded more heavily.
+When loaded, packets build up in switch queues. The switches then generate PFC pause frames, which negatively impact the network latency.
 
 Applications try to reuse TCP connections to lower the cost of TCP handshake.
 
 
 \section{Datacenter}
-Usual application are computations using RPC or similar protocol. The average utilization of network is not extremly high, but the load comes often in bursts.
+Usual applications are computations using RPC or similar protocol. The average utilization of network is not extremly high, but the load comes often in bursts.
 
 Computation in datacenters usually require sending task from one node to other workers and then recieving the results back to single node. This traffic causes problem named incast.
 
 
+\section{Design}
 The reference implementation from original paper uses DPDK on Linux for end-host.
 The part for switches was implemented as software switch, for NetFPGA hardware switch and in P4.
 
@@ -98,8 +103,22 @@ Possible function as a software router depend on multi-port TX (probably not imp
 Bridge to virtual machines.
 
 Can be offloaded to network card/NIC that supports the BPF code.
+The XDP program can be loaded in several modes\footnote{https://pantheon.tech/what-is-af\_xdp/}:
+\begin{itemize}
+    \item \emph{Generic} when the NIC driver doesn't support the XDP framework.
+        The kernel simulates the work of the driver, but doesn't bring any perceptible performance boost, because the packets are still always loaded to the kernel stack to be processed.
+        This is usually the case of generic network drivers in home computers, laptops and virtualized hardware.
+    \item \emph{Native} when the code is passed to the NIC driver, which executes the actions without interaction of the kernel.
+        There is still a short list of drivers supporting the XDP and they are mostly from the enterprise segment.
+    \item \emph{Offloaded} when the NIC supports direct execution in its hardware. This allows the processing of packets outside of CPU and spares the computation power for more important tasks. Few NICs currently support this.
+\end{itemize}
+
+The offloading can allow for example decentralized NIC switching\footnote{https://ieeexplore.ieee.org/document/6866848} without the interference of the CPU.
 
 Returns action: pass, drop, forward (TX), or abort meaning fail in the eBPF program.
+
+XDP also provides new socket \texttt{AF\_XDP}, which is available from kernel version 4.18.
+It does not completly bypass the kernel stack, but works similarly to \texttt{AF\_PACKET} or DPDK.
 
 
 \subsection{Comparison with DPDK}
@@ -124,3 +143,7 @@ Still offers huge performance gain compared to iptables without using the XDP.
   \caption{Performance of XDP compared to DPDK and Linux without XDP on packet dropping measured in millions of packets per second. Measurement if from the end of the year 2018. (https://github.com/tohojo/xdp-paper)}
   \label{fig:drop-test}
 \end{figure}
+
+\chapter{Implementation}
+
+\chapter{Evaluation}
